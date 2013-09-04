@@ -31,7 +31,7 @@ typedef struct {
  0 will be returned if the grid cell is either totally above
  of totally below the isolevel.
  */
-osg::Vec3f VertexInterp(const osg::Vec3f &p1, const osg::Vec3f &p2, float valp1, float valp2);
+osg::Vec3f VertexInterp(double isolevel, osg::Vec3f p1, osg::Vec3f p2, double valp1, double valp2);
 int Polygonise(GRIDCELL grid, double isolevel, TRIANGLE *triangles);
 
 class MarchingCubes {

@@ -16,15 +16,15 @@
 
 #include "Voxel.h"
 
-class Chunk {
+class Chunk : public osg::Group::Group {
 	
 public:
-	Chunk(std::vector<Voxel>& voxels);
+	Chunk(std::vector<osg::ref_ptr<osg::Node>>& voxels);
 	
 	~Chunk();
 	
 private:
-	std::vector<Voxel> _voxels;
+	std::vector<osg::ref_ptr<osg::Node>> _voxels;
 	osg::Vec3ui _dim;
 };
 

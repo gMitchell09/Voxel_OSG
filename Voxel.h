@@ -28,6 +28,7 @@
 #include <osgGA/GUIEventAdapter>
 
 #include <osg/Vec4>
+#include <osg/Vec3f>
 
 #include <osg/ref_ptr>
 #include <osgText/Text>
@@ -56,22 +57,29 @@ enum BlockType {
 	BlockType_NumTypes
 };
 
-class Voxel : public osg::Geode::Geode {
+class Voxel : public osg::Group::Group {
 public:
 	Voxel();
-	Voxel(osg::Vec3 dim, BlockType blockType = BlockType_Default);
+	Voxel(osg::Vec3 dim, osg::Vec3d pos, BlockType blockType = BlockType_Default);
+	Voxel(osg::Vec3 dim, osg::Vec3d pos, int cornerWeight, BlockType blockType = BlockType_Default);
 	
+	~Voxel();
 	
 	bool isActive();
 	void setActive(bool active);
+
 private:
 	
-	void initGeom();
+	osg::Vec3d _position;
 	bool _active;
 	BlockType _blockType;
 	
-	osg::Vec3d _dim;
+	int8_t _cornerWeight;
+	
+	osg::ref_ptr<osg::Geode> _geode;
 	osg::ref_ptr<osg::Geometry> _geom;
+	
+	void initGeom(osg::Vec3d dim);
 };
 
 #endif /* defined(__Voxel_Render__Voxel__) */

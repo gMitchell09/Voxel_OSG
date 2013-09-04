@@ -8,8 +8,10 @@
 
 #include "Chunk.h"
 
-Chunk::Chunk(std::vector<Voxel>& voxels) : _voxels(voxels) {
-	
+Chunk::Chunk(std::vector<osg::ref_ptr<osg::Node>>& voxels) : _voxels(voxels) {
+	for(auto i = voxels.begin(); i != voxels.end(); i++) {
+		this->addChild(i.base()->get());
+	}
 }
 
 Chunk::~Chunk() {
