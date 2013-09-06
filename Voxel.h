@@ -19,6 +19,8 @@
 #include <osg/Texture2D>
 #include <osgDB/ReadFile>
 
+#include <osg/LineWidth>
+
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
 
@@ -74,7 +76,7 @@ private:
 	bool _active;
 	BlockType _blockType;
 	
-	int8_t _cornerWeight;
+	uint8_t _cornerWeight;
 	
 	osg::ref_ptr<osg::Geode> _geode;
 	osg::ref_ptr<osg::Geometry> _geom;
