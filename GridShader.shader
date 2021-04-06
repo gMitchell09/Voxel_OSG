@@ -6,10 +6,13 @@
       _SecondaryColor("Secondary Color", Color) = (0.0, 0.0, 0.0)
 
       [Header(Grid)]
-	  _GridSize("Major Grid Spacing", Range(0.0001, 100000)) = 100
-      _Thickness("Lines Thickness", Range(0.0001, 10)) = 0.3
-      _GridSizeSecondary("Minor Grid Spacing", Range(0.0001, 100)) = 10.0
-      _SecondaryThickness("Lines Thickness (secondary)", Range(0.0001, 10)) = 0.1
+	  _GridSize("Major Grid Spacing", Range(1, 1000)) = 100
+      _Thickness("Lines Thickness", Range(0.01, 10)) = 0.3
+      _GridSizeSecondary("Minor Grid Spacing", Range(1, 1000)) = 10.0
+      _SecondaryThickness("Lines Thickness (minor grid)", Range(0.01, 10)) = 0.1
+
+	  _BlurFactor("Line Blur Factor", Range(0.1, 32)) = 2.0
+	  _SecondaryBlurFactor("Line Blur Factor (minor grid)", Range(0.1, 32)) = 2.0
    }
    SubShader
    {
@@ -48,6 +51,8 @@
          float _Thickness;
 		 float _GridSizeSecondary;
          float _SecondaryThickness;
+         float _BlurFactor;
+         float _SecondaryBlurFactor;
 
          fixed4 _MainColor;
          fixed4 _SecondaryColor;
@@ -68,34 +73,44 @@
             return o;
          }
 
-         // Remap value from a range to another
-         float remap(float value, float from1, float to1, float from2, float to2) {
-            return (value - from1) / (to1 - from1) * (to2 - from2) + from2;
-         }
+		 float3 max3(float3 vec) {
+			return max(max(vec.x, vec.y), vec.z);
+		 }
 
          fixed4 frag (v2f i) : SV_Target
          {
-            fixed4 col = _MainColor;
+            fixed4 mainCol = _MainColor;
+            fixed4 secCol = _SecondaryColor;
+			mainCol.a = 0.0f;
+			secCol.a = 0.0f;
 
-			if (
-				any(
-					float3(1.0f, 1.0f, 1.0f) <=
-						step(
-							abs(i.worldSpacePos.xyz % float3(_GridSize, _GridSize, _GridSize)),
-							float3(1.0f, 1.0f, 1.0f) * (_Thickness - (_Thickness/2.0f))))) {
-					col.a = 1.0f;
-			} else if (
-				any(
-					float3(1.0f, 1.0f, 1.0f) <=
-						step(
-							abs(i.worldSpacePos.xyz % float3(_GridSizeSecondary, _GridSizeSecondary, _GridSizeSecondary)),
-							float3(1.0f, 1.0f, 1.0f) * (_SecondaryThickness - (_SecondaryThickness/2.0f))))) {
-					col = _SecondaryColor;
-			} else {
-				col.a = 0.0f;
-			}
+			float c1, c2, c3, c4;
+			c1 = max3(smoothstep(
+						(_GridSize - _Thickness/_BlurFactor) * float3(1.0f, 1.0f, 1.0f),
+						(_GridSize + _Thickness/_BlurFactor) * float3(1.0f, 1.0f, 1.0f),
+						abs(i.worldSpacePos.xxz % float3(_GridSize, _GridSize, _GridSize))));
 
-			return col;
+			c2 = max3(smoothstep(
+						(_GridSize - _Thickness/_BlurFactor) * float3(1.0f, 1.0f, 1.0f),
+						(_GridSize + _Thickness/_BlurFactor) * float3(1.0f, 1.0f, 1.0f),
+						float3(_GridSize, _GridSize, _GridSize) - abs(i.worldSpacePos.xxz % float3(_GridSize, _GridSize, _GridSize))));
+
+			c3 = max3(smoothstep(
+						(_GridSizeSecondary - _SecondaryThickness/_SecondaryBlurFactor) * float3(1.0f, 1.0f, 1.0f),
+						(_GridSizeSecondary + _SecondaryThickness/_SecondaryBlurFactor) * float3(1.0f, 1.0f, 1.0f),
+						abs(i.worldSpacePos.xxz % float3(_GridSizeSecondary, _GridSizeSecondary, _GridSizeSecondary))));
+
+			c4 = max3(smoothstep(
+						(_GridSizeSecondary - _SecondaryThickness/_SecondaryBlurFactor) * float3(1.0f, 1.0f, 1.0f),
+						(_GridSizeSecondary + _SecondaryThickness/_SecondaryBlurFactor) * float3(1.0f, 1.0f, 1.0f),
+						float3(_GridSizeSecondary, _GridSizeSecondary, _GridSizeSecondary) - abs(i.worldSpacePos.xxz % float3(_GridSizeSecondary, _GridSizeSecondary, _GridSizeSecondary))));
+
+			mainCol.a = max(c1, c2);
+			secCol.a = max(c3, c4);
+			if (mainCol.a > secCol.a) return mainCol;
+			else if (secCol.a > mainCol.a) return secCol;
+
+			return mainCol;
          }
 
          ENDCG
