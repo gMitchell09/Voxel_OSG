@@ -13,6 +13,8 @@
 
 	  _BlurFactor("Line Blur Factor", Range(0.1, 32)) = 2.0
 	  _SecondaryBlurFactor("Line Blur Factor (minor grid)", Range(0.1, 32)) = 2.0
+
+      _FogFactor("Fog Factor (Higher = less foggy)", Range(1, 500)) = 200
    }
    SubShader
    {
@@ -53,6 +55,8 @@
          float _SecondaryThickness;
          float _BlurFactor;
          float _SecondaryBlurFactor;
+
+         float _FogFactor;
 
          fixed4 _MainColor;
          fixed4 _SecondaryColor;
@@ -107,10 +111,28 @@
 
 			mainCol.a = max(c1, c2);
 			secCol.a = max(c3, c4);
-			if (mainCol.a > secCol.a) return mainCol;
-			else if (secCol.a > mainCol.a) return secCol;
 
-			return mainCol;
+            float4 fogColor = float4(1.0f, 1.0f, 1.0f, 0.0f);
+            float d = length(i.worldSpacePos - _WorldSpaceCameraPos);
+            float LOG2 = -1.442695;
+            float fogDensity = 1.0f/_FogFactor;
+            float fog = 1.0f - clamp(exp2(-pow(fogDensity * d, 2)), 0.0f, 1.0f);
+
+            float Frequency = 1000;
+            float sawtooth = frac(i.worldSpacePos.z * Frequency);
+            float triWave = abs(2.0 * sawtooth - 1.0);
+            float dp = length(fwidth(i.uv));
+            float edge = dp * Frequency * 2.0f;
+            float square = smoothstep(0.5 - edge, 0.5 + edge, triWave);
+            square = 1.0f;
+
+            float4 col = mainCol;
+			if (mainCol.a > secCol.a) col = mainCol;
+			else if (secCol.a > mainCol.a) col = secCol;
+            //col = float4(float3(square, square, square), 1.0f);
+            col.a *= square;
+
+			return lerp(col, fogColor, fog);
          }
 
          ENDCG
