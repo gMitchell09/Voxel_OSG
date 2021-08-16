@@ -83,6 +83,7 @@
 
          fixed4 frag (v2f i) : SV_Target
          {
+			 // comment
             fixed4 mainCol = _MainColor;
             fixed4 secCol = _SecondaryColor;
 			mainCol.a = 0.0f;
